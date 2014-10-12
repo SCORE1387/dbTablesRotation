@@ -304,17 +304,9 @@ IS
   IS
     ddl_query           VARCHAR2(32000);
     BEGIN
-      --DBMS_OUTPUT.PUT_LINE('create_tbl_like_including_all start: ' || primary_table_name || ', ' || new_table_name);
       --create new table
-      SELECT
-        replace(dbms_metadata.get_ddl('TABLE', primary_table_name), primary_table_name, new_table_name)
-      INTO ddl_query
-      FROM dual;
-      ddl_query := substr(ddl_query, 1, length(ddl_query) - 1);
-      --DBMS_OUTPUT.PUT_LINE('Query: ' || ddl_query);
+      ddl_query := substr(replace(dbms_metadata.get_ddl('TABLE', primary_table_name), primary_table_name, new_table_name), -1);
       EXECUTE IMMEDIATE ddl_query;
-
-      --DBMS_OUTPUT.PUT_LINE('Table created');
 
       --create triggers for new table
       FOR trg IN (SELECT trgs.trigger_name FROM user_triggers trgs WHERE trgs.table_name = primary_table_name)
@@ -326,8 +318,6 @@ IS
         EXECUTE IMMEDIATE ddl_query;
       END LOOP;
 
-      --DBMS_OUTPUT.PUT_LINE('Triggers created');
-
       --create indexes for new table
       FOR idx IN (SELECT idxs.index_name FROM user_indexes idxs WHERE idxs.table_name = primary_table_name)
       LOOP
@@ -337,8 +327,6 @@ IS
         ddl_query := substr(ddl_query, 1, length(ddl_query) - 1);
         EXECUTE IMMEDIATE ddl_query;
       END LOOP;
-
-      --DBMS_OUTPUT.PUT_LINE('Indexes created');
 
     END;
 
